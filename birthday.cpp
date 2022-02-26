@@ -1,12 +1,27 @@
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <iostream>
-#include <random>
 #include <thread>
 #include <vector>
 
 using namespace std;
+
+class MyRandom {
+private:
+  uint64_t seed;
+
+public:
+  MyRandom(uint64_t seed) : seed(seed) {}
+  uint64_t rand(uint64_t range) {
+    uint64_t temp = seed;
+    temp ^= temp << 13;
+    temp ^= temp >> 7;
+    temp ^= temp << 17;
+    return (seed = temp) % range;
+  }
+};
 
 class UsedBirthdays {
 private:
@@ -20,13 +35,11 @@ public:
 };
 class BirthdayGenerator {
 private:
-  default_random_engine randEngine;
-  uniform_int_distribution<int> rand;
+  MyRandom rand;
 
 public:
-  BirthdayGenerator()
-      : randEngine((unsigned)clock() + time(nullptr)), rand(0, 364) {}
-  int random() { return rand(randEngine); }
+  BirthdayGenerator() : rand((uint64_t)clock() + time(nullptr)) {}
+  int random() { return rand.rand(365); }
 };
 
 struct Worker {
@@ -74,8 +87,8 @@ void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
   atomic_int *intersectionCounts = context->intersectionCounts;
   BirthdayGenerator birthdayGenerator;
-  for (int people = 2; people <= MAX_PEOPLE; people++) {
-    for (int repetition = 0; repetition < repetitions; repetition++) {
+  for (int repetition = 0; repetition < repetitions; repetition++) {
+    for (int people = 2; people <= MAX_PEOPLE; people++) {
       UsedBirthdays usedBirthdays;
       for (int person = 0; person < people; person++) {
         int birthday = birthdayGenerator.random();

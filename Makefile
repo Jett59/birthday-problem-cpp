@@ -1,4 +1,4 @@
-CXXFLAGS:=-Ofast -pthread -std=gnu++17 -g
+CXXFLAGS:=-march=native -Ofast -pthread -std=gnu++17
 
 SRCS:=birthday.cpp
 
