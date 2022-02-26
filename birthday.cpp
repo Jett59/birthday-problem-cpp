@@ -1,7 +1,7 @@
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <ctime>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -53,7 +53,7 @@ void workerFunction(Worker *context);
 #define MAX_PEOPLE 100
 
 int main() {
-  clock_t start = clock();
+  auto start = chrono::system_clock::now().time_since_epoch();
   int numWorkers = thread::hardware_concurrency();
   int repetitionsPerWorker = TOTAL_REPETITIONS / numWorkers;
   Worker *workerContexts = new Worker[numWorkers];
@@ -78,8 +78,11 @@ int main() {
     printf("%.2f%% for %d\n", intersectionProbability * 100, i);
   }
   delete[] workerContexts;
-  clock_t timeTaken = clock() - start;
-  printf("It took %.3fs\n", double(timeTaken) / CLOCKS_PER_SEC);
+  auto timeTaken = chrono::system_clock::now().time_since_epoch() - start;
+  printf(
+      "It took %.3fs\n",
+      double(chrono::duration_cast<chrono::milliseconds>(timeTaken).count()) /
+          1000.0);
   return 0;
 }
 
