@@ -8,22 +8,28 @@
 
 using namespace std;
 
-class MyRandom {
+class Random {
 private:
-  uint64_t seed;
+  uint32_t seed;
 
 public:
-  MyRandom(uint64_t seed) : seed(seed) {}
-  uint64_t rand(uint64_t range) {
-    uint64_t temp = seed;
+  Random() : Random(1) {}
+  Random(uint32_t seed) : seed(seed) {}
+  uint32_t operator()(uint32_t range) {
+    uint32_t temp = seed;
     temp ^= temp << 13;
-    temp ^= temp >> 7;
-    temp ^= temp << 17;
+    temp ^= temp >> 17;
+    temp ^= temp << 5;
     return (seed = temp) % range;
+  }
+  void split(Random randoms[], int n) {
+    for (int i = 0; i < n; i++) {
+      randoms[i] = Random(seed + 31 * i);
+    }
   }
 };
 
-class UsedBirthdays {
+class alignas(16) UsedBirthdays {
 private:
   bool usedBirthdays[365];
 
@@ -32,14 +38,6 @@ public:
   void add(int birthday) { usedBirthdays[birthday] = true; }
   bool isUsed(int birthday) { return usedBirthdays[birthday]; }
   void clear() { memset(usedBirthdays, 0, sizeof(usedBirthdays)); }
-};
-class BirthdayGenerator {
-private:
-  MyRandom rand;
-
-public:
-  BirthdayGenerator() : rand((uint64_t)clock() + time(nullptr)) {}
-  int random() { return rand.rand(365); }
 };
 
 struct Worker {
@@ -86,15 +84,25 @@ int main() {
   return 0;
 }
 
+#define NUM_RANDS 64
+
 void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
   atomic_int *intersectionCounts = context->intersectionCounts;
-  BirthdayGenerator birthdayGenerator;
+  Random primaryRand(chrono::system_clock::now().time_since_epoch().count());
+  Random rands[NUM_RANDS];
+  primaryRand.split(rands, NUM_RANDS);
   for (int repetition = 0; repetition < repetitions; repetition++) {
     for (int people = 2; people <= MAX_PEOPLE; people++) {
       UsedBirthdays usedBirthdays;
+      int randomBirthdays[NUM_RANDS];
       for (int person = 0; person < people; person++) {
-        int birthday = birthdayGenerator.random();
+        if (person % NUM_RANDS == 0) {
+          for (int i = 0; i < NUM_RANDS; i++) {
+            randomBirthdays[i] = rands[i](365);
+          }
+        }
+        int birthday = randomBirthdays[person % NUM_RANDS];
         if (usedBirthdays.isUsed(birthday)) {
           intersectionCounts[people]++;
           break;
