@@ -88,7 +88,8 @@ int main() {
 
 void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
-  atomic_int *intersectionCounts = context->intersectionCounts;
+  atomic_int *externalIntersectionCounts = context->intersectionCounts;
+  int intersectionCounts[MAX_PEOPLE + 1] = {0};
   Random primaryRand(chrono::system_clock::now().time_since_epoch().count());
   Random rands[NUM_RANDS];
   primaryRand.split(rands, NUM_RANDS);
@@ -111,5 +112,8 @@ void workerFunction(Worker *context) {
         }
       }
     }
+  }
+  for (int i = 2; i <= MAX_PEOPLE; i++) {
+    externalIntersectionCounts[i] += intersectionCounts[i];
   }
 }
