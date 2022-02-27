@@ -1,4 +1,5 @@
-CXXFLAGS:=-march=native -Ofast -pthread -std=gnu++17
+CXXFLAGS:=-march=native -Ofast -pthread -std=c++17
+
 SRCS:=birthday.cpp
 
 a.out: $(SRCS)
