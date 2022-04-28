@@ -70,13 +70,13 @@ int main() {
   for (thread &workerThread : workerThreads) {
     workerThread.join();
   }
+  auto timeTaken = chrono::system_clock::now().time_since_epoch() - start;
   for (int i = 2; i <= MAX_PEOPLE; i++) {
     double intersectionProbability =
         intersectionCounts[i] / (double)TOTAL_REPETITIONS;
     printf("%.2f%% for %d\n", intersectionProbability * 100, i);
   }
   delete[] workerContexts;
-  auto timeTaken = chrono::system_clock::now().time_since_epoch() - start;
   printf(
       "It took %.3fs\n",
       double(chrono::duration_cast<chrono::milliseconds>(timeTaken).count()) /
@@ -84,7 +84,7 @@ int main() {
   return 0;
 }
 
-#define NUM_RANDS 64
+#define NUM_RANDS 128
 
 void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
@@ -105,8 +105,7 @@ void workerFunction(Worker *context) {
             randomBirthdays[i] = rands[i](365);
           }
         }
-        int birthday = randomBirthdays[nextBirthdayIndex];
-        nextBirthdayIndex++;
+        int birthday = randomBirthdays[nextBirthdayIndex++];
         if (usedBirthdays.isUsed(birthday)) {
           intersectionCounts[people]++;
           break;
