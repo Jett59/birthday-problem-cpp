@@ -31,7 +31,7 @@ public:
 
 class alignas(16) UsedBirthdays {
 private:
-  bool usedBirthdays[365];
+  bool usedBirthdays[384];
 
 public:
   UsedBirthdays() { clear(); }
@@ -93,17 +93,20 @@ void workerFunction(Worker *context) {
   Random primaryRand(chrono::system_clock::now().time_since_epoch().count());
   Random rands[NUM_RANDS];
   primaryRand.split(rands, NUM_RANDS);
-  for (int repetition = 0; repetition < repetitions; repetition++) {
-    for (int people = 2; people <= MAX_PEOPLE; people++) {
+  int randomBirthdays[NUM_RANDS];
+  int nextBirthdayIndex = NUM_RANDS;
+  for (int people = 2; people <= MAX_PEOPLE; people++) {
+    for (int repetition = repetitions; repetition > 0; repetition--) {
       UsedBirthdays usedBirthdays;
-      int randomBirthdays[NUM_RANDS];
       for (int person = 0; person < people; person++) {
-        if (person % NUM_RANDS == 0) {
+        if (nextBirthdayIndex == NUM_RANDS) {
+          nextBirthdayIndex = 0;
           for (int i = 0; i < NUM_RANDS; i++) {
             randomBirthdays[i] = rands[i](365);
           }
         }
-        int birthday = randomBirthdays[person % NUM_RANDS];
+        int birthday = randomBirthdays[nextBirthdayIndex];
+        nextBirthdayIndex++;
         if (usedBirthdays.isUsed(birthday)) {
           intersectionCounts[people]++;
           break;
