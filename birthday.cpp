@@ -10,16 +10,16 @@ using namespace std;
 
 class Random {
 private:
-  uint32_t seed;
+  uint16_t seed;
 
 public:
   Random() : Random(1) {}
-  Random(uint32_t seed) : seed(seed) {}
-  uint32_t operator()(uint32_t range) {
-    uint32_t temp = seed;
-    temp ^= temp << 13;
-    temp ^= temp >> 17;
-    temp ^= temp << 5;
+  Random(uint16_t seed) : seed(seed) {}
+  uint16_t operator()(uint32_t range) {
+    uint16_t temp = seed;
+    temp ^= temp << 7;
+    temp ^= temp >> 9;
+    temp ^= temp << 8;
     return (seed = temp) % range;
   }
   void split(Random randoms[], int n) {
@@ -84,7 +84,7 @@ int main() {
   return 0;
 }
 
-#define NUM_RANDS 128
+#define NUM_RANDS 1024
 
 void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
@@ -93,7 +93,7 @@ void workerFunction(Worker *context) {
   Random primaryRand(chrono::system_clock::now().time_since_epoch().count());
   Random rands[NUM_RANDS];
   primaryRand.split(rands, NUM_RANDS);
-  int randomBirthdays[NUM_RANDS];
+  uint16_t randomBirthdays[NUM_RANDS];
   int nextBirthdayIndex = NUM_RANDS;
   for (int people = 2; people <= MAX_PEOPLE; people++) {
     for (int repetition = repetitions; repetition > 0; repetition--) {
