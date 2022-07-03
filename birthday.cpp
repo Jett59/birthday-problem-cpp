@@ -29,13 +29,16 @@ public:
   }
 };
 
-class alignas(16) UsedBirthdays {
+class UsedBirthdays {
 private:
+  // Round up to a multiple of 64
   bool usedBirthdays[384];
 
 public:
   UsedBirthdays() { clear(); }
   void add(int birthday) { usedBirthdays[birthday] = true; }
+  void remove(int birthday) { usedBirthdays[birthday] = false; }
+  void set(int birthday, bool used) { usedBirthdays[birthday] = used; }
   bool isUsed(int birthday) { return usedBirthdays[birthday]; }
   void clear() { memset(usedBirthdays, 0, sizeof(usedBirthdays)); }
 };
@@ -84,7 +87,7 @@ int main() {
   return 0;
 }
 
-#define NUM_RANDS 1024
+#define NUM_RANDS 256
 
 void workerFunction(Worker *context) {
   int repetitions = context->repetitions;
@@ -106,11 +109,11 @@ void workerFunction(Worker *context) {
           }
         }
         int birthday = randomBirthdays[nextBirthdayIndex++];
-        if (usedBirthdays.isUsed(birthday)) {
+        bool isUsed = usedBirthdays.isUsed(birthday);
+        usedBirthdays.set(birthday, true);
+        if (isUsed) {
           intersectionCounts[people]++;
           break;
-        } else {
-          usedBirthdays.add(birthday);
         }
       }
     }
